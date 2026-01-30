@@ -1,0 +1,111 @@
+version: "3.9"
+
+services:
+  # --- 1) Seeder: copie /public de l'image Laravel vers le volume public_build ---
+  public-seeder:
+    image: soumayaabderahmen/chatbot-laravel:latest
+    container_name: public-seeder
+    restart: "no"
+    command: >
+      sh -lc '
+        set -e
+        cp -a /var/www/public/. /target
+        echo "[seeder] /public copié vers le volume."
+        # petit sleep pour éviter les courses au démarrage
+        sleep 5
+      '
+    volumes:
+      - public_build:/target
+    networks: [appnet]
+
+  # --- 2) PHP-FPM / Laravel ---
+  laravel:
+    image: soumayaabderahmen/chatbot-laravel:latest
+    container_name: laravel
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    # NE PAS monter public_build ici, pour ne pas écraser les assets de l'image
+    volumes:
+      - laravel_storage:/var/www/storage
+      - ./.env:/var/www/.env:ro
+    expose:
+      - "9000"   # PHP-FPM
+      - "8080"   # Reverb (WebSocket) si activé
+    networks: [appnet]
+    command: >
+      sh -lc '
+        set -e
+        cd /var/www
+        if ! grep -q "^APP_KEY=" .env || [ -z "$(grep "^APP_KEY=" .env | cut -d= -f2)" ]; then
+          echo "⚠️ APP_KEY manquant → génération"
+          php artisan key:generate --force
+        fi
+        # Lancer Reverb en arrière-plan si disponible
+        if php artisan list | grep -q "^  reverb:start"; then
+          php artisan reverb:start --host=0.0.0.0 --port=8080 & disown
+        fi
+        php-fpm --nodaemonize
+      '
+
+  # --- 3) FastAPI LLM backend (proxifié par Nginx) ---
+  llm-backend:
+    image: soumayaabderahmen/chatbot-llm-backend:latest
+    container_name: llm-backend
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_API=http://ollama:11434
+    expose:
+      - "5005"   # seulement réseau interne
+    networks: [appnet]
+
+  # --- 4) Nginx (sert /public et proxy les routes IA + WebSocket Reverb) ---
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    depends_on:
+      - public-seeder
+      - laravel
+      - llm-backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # ta conf Nginx (avec http2 on; et corrections déjà vues)
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # assets publics (manifest, assets Vite, symlink storage) depuis le volume
+      - public_build:/var/www/public:ro
+      # 🔑 IMPORTANT: le volume storage aussi dans Nginx pour que le symlink pointe vers des fichiers réels
+      - laravel_storage:/var/www/storage:ro
+      # certificats Let's Encrypt
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks: [appnet]
+
+  # --- 5) Ollama (non exposé publiquement) ---
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    expose:
+      - "11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_FLASH_ATTENTION=1
+    networks: [appnet]
+
+volumes:
+  laravel_storage:
+  ollama_models:
+  public_build:
+
+networks:
+  appnet:
+    driver: bridge

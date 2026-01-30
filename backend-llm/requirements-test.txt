@@ -1,0 +1,21 @@
+# --- Dépendances de test principales ---
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.10.0
+pytest-cov>=4.0.0
+pytest-timeout>=2.1.0
+pytest-xdist>=3.0.0      # Exécution parallèle des tests
+
+# --- Dépendances pour tests FastAPI + HTTP ---
+httpx>=0.24.0             # Test client HTTP asynchrone
+fastapi>=0.100.0          # Pour typage/API client dans tests
+uvicorn>=0.22.0           # Pour test de lancement serveur
+
+# --- Dépendances mocks / fixtures ---
+responses>=0.23.0         # Mock d’API HTTP externe (ex: Ollama)
+freezegun>=1.2.0          # Pour geler le temps dans les tests
+factory-boy>=3.2.0        # Pour générer des objets de test
+
+# --- Modules NLP utiles aux tests ---
+langdetect>=1.0.9         # Utilisé directement dans le code
+langid>=1.0.0             # Aussi utilisé

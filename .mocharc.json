@@ -1,0 +1,8 @@
+{
+  "require": ["jsdom-global/register"],
+  "spec": "resources/js/tests/**/*.test.js",
+  "recursive": true,
+  "timeout": 5000,
+  "reporter": "spec",
+  "colors": true
+}

@@ -1,0 +1,74 @@
+stages:
+  - format
+  - validate
+  - plan
+  - apply
+
+image: 
+  name: hashicorp/terraform:light
+  entrypoint:
+    - '/usr/bin/env'
+    - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - infra/.terraform
+
+before_script:
+  - terraform --version
+
+# === FORMAT ===
+format:
+  stage: format
+  script:
+    - terraform -chdir=infra fmt -check
+  only:
+    changes:
+      - infra/**/*
+      - .gitlab-ci.yml
+
+# === VALIDATE ===
+validate:
+  stage: validate
+  script:
+    - terraform -chdir=infra init -backend=false
+    - terraform -chdir=infra validate
+  only:
+    changes:
+      - infra/**/*
+      - .gitlab-ci.yml
+
+# === PLAN ===
+plan:
+  stage: plan
+  script:
+    - terraform -chdir=infra init
+    - terraform -chdir=infra plan -out=tfplan
+  artifacts:
+    name: tfplan
+    paths:
+      - infra/tfplan
+    expire_in: 3 days
+  only:
+    changes:
+      - infra/**/*
+      - .gitlab-ci.yml
+
+# === APPLY (MANUAL) ===
+apply:
+  stage: apply
+  script:
+    - terraform -chdir=infra init
+    - terraform -chdir=infra apply -input=false tfplan
+  dependencies:
+    - plan
+  when: manual
+  environment:
+    name: production
+  only:
+    changes:
+      - infra/**/*
+      - .gitlab-ci.yml

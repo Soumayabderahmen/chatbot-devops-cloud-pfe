@@ -1,0 +1,16 @@
+# .gitlab-ci.yml
+stages:
+ # - format
+ # - validate
+ # - plan
+ # - apply
+  - build
+  - test
+  - quality
+  - docker
+  - security_scan
+  - deploy
+include:
+ # - local: '.gitlab/ci/infra-pipeline.yml'
+  - local: '.gitlab/ci/app-pipeline.yml'
+

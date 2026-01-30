@@ -1,0 +1,7 @@
+node_modules
+vendor
+coverage
+storage/logs
+.git
+tests
+.env*

@@ -1,0 +1,32 @@
+
+# --- New Training (2025-06-17T12:14:20.087930) ---
+# validation_etape
+Comment valider une étape ?
+Je viens de terminer l’étape 4, que faire ?
+Quand est-ce qu’une étape est considérée comme validée ?
+J’ai fini une étape, elle est validée automatiquement ?
+Is my step validated automatically?
+What happens after I submit a deliverable?
+How can I complete a step?
+I finished step 5, what now?
+
+# --- New Training (2025-06-18T11:31:10.281196) ---
+# trouver_coach
+Comment trouver mon coach ?
+Où est le profil de mon coach ?
+Qui m’accompagne dans le programme ?
+I want to know who my coach is
+Where can I find my mentor info?
+How do I contact my assigned coach?
+
+
+# --- New Training (2025-07-08T13:04:59.398976) ---
+# livrable
+C’est quoi le livrable de l’étape 3 ?
+Je dois rendre quoi ?
+Qu’est-ce qu’on attend à l’étape 5 ?
+Quel livrable je dois soumettre ?
+What is the deliverable at step 4?
+I don’t know what to submit
+what do I have to deliver in this step?
+Can you tell me what is required at step 2?
